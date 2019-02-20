@@ -25,7 +25,7 @@ for v in $VOLUMES; do
 
     # Cleaning snapshots older than 7 days
     while [ $(ls -d $v.daily-* | wc -l) -gt 7 ]; do
-        echo "[$(date +'%Y-%m-%d %H:%M')] Cleaning snapshot $(ls -d $v.daily-* | head -n1)"
+        echo -n "[$(date +'%Y-%m-%d %H:%M')] "
         btrfs subvolume delete $(ls -d $v.daily-* | head -n1)
     done
 done
