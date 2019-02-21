@@ -1,5 +1,7 @@
 #! /bin/bash
 
+DEBUG=0
+
 # Check for required /etc/snapshots.list
 [ -e /etc/snapshots.list ] || echo "ERROR: /etc/snapshots.list is required"
 [ -e /etc/snapshots.list ] || exit 1
@@ -20,7 +22,9 @@ for v in $VOLUMES; do
         btrfs subvolume snapshot -r $v $v.daily-$(date +%Y-%m-%d)
         sync
     else
-        echo "[$(date +'%Y-%m-%d %H:%M')] Snapshot $v.daily-$(date +%Y-%m-%d) already exists"
+        if [ $DEBUG -eq 1 ]; then
+            echo "[$(date +'%Y-%m-%d %H:%M')] Snapshot $v.daily-$(date +%Y-%m-%d) already exists"
+        fi
     fi
 
     # Cleaning snapshots older than 7 days
