@@ -1,0 +1,32 @@
+#! /bin/bash
+
+source /etc/default/snapshots
+
+# Check for required /etc/snapshots.list
+[ -e /etc/snapshots.list ] || (echo "ERROR: /etc/snapshots.list is required" && exit 1)
+
+# Read btrfs volumes to snapshot from /etc/snapshots.list
+VOLUMES=$(cat /etc/snapshots.list)
+for volume in $VOLUMES; do
+    # Check last char, must be a '/'
+    if [ x"${volume: -1}" != x'/' ]; then
+        echo "ERROR: check /etc/snapshots.list, ${volume} should end with a '/'"
+        exit 1
+    fi
+
+    # Check if snapshot is already done
+    btrfs subvolume show ${volume}.daily-$(date +%Y-%m-%d) > /dev/null 2>&1
+    if [ $? -ne 0 ]; then
+        echo -n "[$(date +'%Y-%m-%d %H:%M')] "
+        btrfs subvolume snapshot -r ${volume} ${volume}.daily-$(date +%Y-%m-%d)
+        sync
+    else
+        [ ${DEBUG} -eq 1 ] && echo "[$(date +'%Y-%m-%d %H:%M')] Snapshot ${volume}.daily-$(date +%Y-%m-%d) already exists"
+    fi
+
+    # Cleaning snapshots to keep no more than 7
+    while [ $(ls -d ${volume}.daily-* | wc -l) -gt 7 ]; do
+        echo -n "[$(date +'%Y-%m-%d %H:%M')] "
+        btrfs subvolume delete $(ls -d ${volume}.daily-* | head -n1)
+    done
+done

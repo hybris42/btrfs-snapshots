@@ -1,4 +1,13 @@
 PATH=/bin:/usr/bin:/sbin:/usr/sbin
 
-# Try daily snapshot every hours (laptop)
-0 * * * * root /usr/sbin/snapshots >> /var/log/snapshots.log
+# Desktop / server
+# Daily snapshot at 1am
+# Daily send snapshots at 1:15am
+0  1 * * * root /usr/local/sbin/snapshots >> /var/log/snapshots.log
+15 1 * * * root /usr/local/sbin/snapshots-send >> /var/log/snapshots.log
+
+# Laptop
+# Try daily snapshot every hours
+# Daily send snapshots at 1pm
+# 0  * * * * root /usr/local/sbin/snapshots >> /var/log/snapshots.log
+# 0 13 * * * root /usr/local/sbin/snapshots-send >> /var/log/snapshots.log

@@ -1,0 +1,62 @@
+#! /bin/bash
+
+source /etc/default/snapshots
+
+# Check for required /etc/snapshots.list
+[ -e /etc/snapshots.list ] || (echo "ERROR: /etc/snapshots.list is required" && exit 1)
+
+# Alias to run commands on SNAPSHOTS_USER@SNAPSHOTS_SERVER defined from
+# /etc/default/snapshots
+do_ssh() {
+    ssh ${SNAPSHOTS_USER}@${SNAPSHOTS_SERVER} $@
+}
+
+# Check if snapshots server is up
+do_ssh true 2> /dev/null || (echo "ERROR: ${SNAPSHOTS_SERVER} unreachable" && exit 1)
+
+# Read btrfs volumes to snapshot from /etc/snapshots.list
+VOLUMES=$(cat /etc/snapshots.list)
+for volume in ${VOLUMES}; do
+    # Make sure remote directory exists
+    do_ssh mkdir -p ${SNAPSHOTS_PATH}${volume}
+
+    # Try to send every available snapshots
+    previous_snapshot=""
+    for snapshot in ${volume}.daily-*; do
+        # Snapshot already sent
+        if do_ssh test -e ${SNAPSHOTS_PATH}${snapshot}; then
+            [ ${DEBUG} -eq 1 ] && echo "[$(date +'%Y-%m-%d %H:%M')] Snapshot ${snapshot} already sent"
+            previous_snapshot=${snapshot}
+            continue
+        fi
+
+        # First snapshot, sent plain snapshot
+        if [ x${previous_snapshot} = x ]; then
+            echo "Send first snapshot ${snapshot}"
+            btrfs send -q ${snapshot} | do_ssh btrfs receive /srv/snapshots/trantor${volume}
+            previous_snapshot=${snapshot}
+            continue
+        fi
+
+        # Send incremental snapshot, cloned from previous snapshot
+        echo -n "Send ${volume} "
+        btrfs send -q -c ${previous_snapshot} ${snapshot} | do_ssh btrfs receive /srv/snapshots/trantor${volume}
+        previous_snapshot=${snapshot}
+    done
+
+    # Cleaning snapshots to keep no more than 30
+    while [ $(do_ssh ls -d ${SNAPSHOTS_PATH}${volume}.daily-\* | wc -l) -gt 30 ]; do
+        echo -n "[$(date +'%Y-%m-%d %H:%M')] "
+        do_ssh btrfs subvolume delete $(do_ssh ls -d ${SNAPSHOTS_PATH}${volume}.daily-\* | head -n1)
+    done
+
+    # Monthly snapshot from last one
+    last_snapshot_path=$(do_ssh ls -d ${SNAPSHOTS_PATH}${volume}.daily-\* | tail -n1)
+    last_snapshot_month=${last_snapshot_path:(-10):7}
+    if $(do_ssh test ! -e ${SNAPSHOTS_PATH}${volume}.monthly-${last_snapshot_month}); then
+        do_ssh btrfs subvolume snapshot -r ${last_snapshot_path} ${SNAPSHOTS_PATH}${volume}.monthly-${last_snapshot_month}
+        do_ssh sync
+    else
+        [ ${DEBUG} -eq 1 ] && echo "[$(date +'%Y-%m-%d %H:%M')] Monthly snapshot ${SNAPSHOTS_PATH}${volume}.monthly-${last_snapshot_month} already exists"
+    fi
+done
