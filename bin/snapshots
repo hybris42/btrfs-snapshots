@@ -3,11 +3,13 @@
 source /etc/default/snapshots
 
 # Check for required /etc/snapshots.list
-[ -e /etc/snapshots.list ] || (echo "ERROR: /etc/snapshots.list is required" && exit 1)
+if [ ! -e /etc/snapshots.list ]; then
+    echo "ERROR: /etc/snapshots.list is required"
+    exit 1
+fi
 
 # Read btrfs volumes to snapshot from /etc/snapshots.list
-VOLUMES=$(cat /etc/snapshots.list)
-for volume in $VOLUMES; do
+for volume in $(cat /etc/snapshots.list); do
     # Check last char, must be a '/'
     if [ x"${volume: -1}" != x'/' ]; then
         echo "ERROR: check /etc/snapshots.list, ${volume} should end with a '/'"
@@ -16,7 +18,7 @@ for volume in $VOLUMES; do
 
     # Check if snapshot is already done
     btrfs subvolume show ${volume}.daily-$(date +%Y-%m-%d) > /dev/null 2>&1
-    if [ $? -ne 0 ]; then
+    if ! btrfs subvolume show ${volume}.daily-$(date +%Y-%m-%d) > /dev/null 2>&1; then
         echo -n "[$(date +'%Y-%m-%d %H:%M')] "
         btrfs subvolume snapshot -r ${volume} ${volume}.daily-$(date +%Y-%m-%d)
         sync

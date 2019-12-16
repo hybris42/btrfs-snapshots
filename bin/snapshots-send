@@ -3,20 +3,30 @@
 source /etc/default/snapshots
 
 # Check for required /etc/snapshots.list
-[ -e /etc/snapshots.list ] || (echo "ERROR: /etc/snapshots.list is required" && exit 1)
+if [ ! -e /etc/snapshots.list ]; then
+    echo "ERROR: /etc/snapshots.list is required"
+    exit 1
+fi
 
-# Alias to run commands on SNAPSHOTS_USER@SNAPSHOTS_SERVER defined from
-# /etc/default/snapshots
+# Check for required variables that should be defined in /etc/default/snapshots
+if [ -z ${SNAPSHOTS_USER} ] || [ -z ${SNAPSHOTS_SERVER} ] || [ -z ${SNAPSHOTS_PATH} ]; then
+    echo "ERROR: SNAPSHOTS_USER, SNAPSHOTS_SERVER or SNAPSHOTS_PATH is not defined, check your /etc/default/snapshots"
+    exit 1
+fi
+
+# Alias to run commands on SNAPSHOTS_USER@SNAPSHOTS_SERVER defined from /etc/default/snapshots
 do_ssh() {
     ssh ${SNAPSHOTS_USER}@${SNAPSHOTS_SERVER} $@
 }
 
 # Check if snapshots server is up
-do_ssh true 2> /dev/null || (echo "ERROR: ${SNAPSHOTS_SERVER} unreachable" && exit 1)
+if ! do_ssh true 2> /dev/null; then
+    echo "ERROR: ${SNAPSHOTS_SERVER} unreachable"
+    exit 1
+fi
 
 # Read btrfs volumes to snapshot from /etc/snapshots.list
-VOLUMES=$(cat /etc/snapshots.list)
-for volume in ${VOLUMES}; do
+for volume in $(cat /etc/snapshots.list); do
     # Make sure remote directory exists
     do_ssh mkdir -p ${SNAPSHOTS_PATH}${volume}
 
