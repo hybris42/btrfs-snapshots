@@ -32,7 +32,7 @@ for volume in ${VOLUMES}; do
 
         # First snapshot, sent plain snapshot
         if [ x${previous_snapshot} = x ]; then
-            echo "Send first snapshot ${snapshot}"
+            echo -n "Send first snapshot ${volume} "
             btrfs send -q ${snapshot} | do_ssh btrfs receive /srv/snapshots/trantor${volume}
             previous_snapshot=${snapshot}
             continue
