@@ -32,14 +32,14 @@ for volume in ${VOLUMES}; do
 
         # First snapshot, sent plain snapshot
         if [ x${previous_snapshot} = x ]; then
-            echo -n "Send first snapshot ${volume} "
+            echo -n "[$(date +'%Y-%m-%d %H:%M')] Send first snapshot ${volume} "
             btrfs send -q ${snapshot} | do_ssh btrfs receive /srv/snapshots/trantor${volume}
             previous_snapshot=${snapshot}
             continue
         fi
 
         # Send incremental snapshot, cloned from previous snapshot
-        echo -n "Send ${volume} "
+        echo -n "[$(date +'%Y-%m-%d %H:%M')] Send ${volume} "
         btrfs send -q -c ${previous_snapshot} ${snapshot} | do_ssh btrfs receive /srv/snapshots/trantor${volume}
         previous_snapshot=${snapshot}
     done
