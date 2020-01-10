@@ -50,7 +50,7 @@ for volume in $(cat /etc/snapshots.list); do
 
         # Send incremental snapshot, cloned from previous snapshot
         echo -n "[$(date +'%Y-%m-%d %H:%M')] Send ${volume} "
-        btrfs send -q -c ${previous_snapshot} ${snapshot} | do_ssh btrfs receive ${SNAPSHOTS_PATH}${volume}
+        btrfs send -q -p ${previous_snapshot} ${snapshot} | do_ssh btrfs receive ${SNAPSHOTS_PATH}${volume}
         previous_snapshot=${snapshot}
     done
 
