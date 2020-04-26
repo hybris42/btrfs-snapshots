@@ -19,16 +19,14 @@ for volume in $(cat /etc/snapshots.list); do
     # Check if snapshot is already done
     btrfs subvolume show ${volume}.daily-$(date +%Y-%m-%d) > /dev/null 2>&1
     if ! btrfs subvolume show ${volume}.daily-$(date +%Y-%m-%d) > /dev/null 2>&1; then
-        echo -n "[$(date +'%Y-%m-%d %H:%M')] "
         btrfs subvolume snapshot -r ${volume} ${volume}.daily-$(date +%Y-%m-%d)
         sync
     else
-        [ ${DEBUG} -eq 1 ] && echo "[$(date +'%Y-%m-%d %H:%M')] Snapshot ${volume}.daily-$(date +%Y-%m-%d) already exists"
+        echo "Snapshot ${volume}.daily-$(date +%Y-%m-%d) already exists"
     fi
 
     # Cleaning snapshots to keep no more than 7
     while [ $(ls -d ${volume}.daily-* | wc -l) -gt 7 ]; do
-        echo -n "[$(date +'%Y-%m-%d %H:%M')] "
         btrfs subvolume delete $(ls -d ${volume}.daily-* | head -n1)
     done
 done

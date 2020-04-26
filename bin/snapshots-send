@@ -35,44 +35,42 @@ for volume in $(cat /etc/snapshots.list); do
     for snapshot in ${volume}.daily-*; do
         # Snapshot already sent
         if do_ssh test -e ${SNAPSHOTS_PATH}${snapshot}; then
-            [ ${DEBUG} -eq 1 ] && echo "[$(date +'%Y-%m-%d %H:%M')] Snapshot ${snapshot} already sent"
+            echo "Snapshot ${snapshot} already sent"
             previous_snapshot=${snapshot}
             continue
         fi
 
         # First snapshot, sent plain snapshot
         if [ x${previous_snapshot} = x ]; then
-            echo -n "[$(date +'%Y-%m-%d %H:%M')] Send first snapshot ${volume} "
-            btrfs send -q ${snapshot} | do_ssh btrfs receive ${SNAPSHOTS_PATH}${volume}
+            echo -n "Send first snapshot ${volume} "
+            btrfs send -q ${snapshot} | do_ssh sudo btrfs receive ${SNAPSHOTS_PATH}${volume}
             previous_snapshot=${snapshot}
             continue
         fi
 
         # Send incremental snapshot, cloned from previous snapshot
-        echo -n "[$(date +'%Y-%m-%d %H:%M')] Send ${volume} "
-        btrfs send -q -p ${previous_snapshot} ${snapshot} | do_ssh btrfs receive ${SNAPSHOTS_PATH}${volume}
+        echo -n "Send ${volume} "
+        btrfs send -q -p ${previous_snapshot} ${snapshot} | do_ssh sudo btrfs receive ${SNAPSHOTS_PATH}${volume}
         previous_snapshot=${snapshot}
     done
 
     # Cleaning daily snapshots to keep no more than 30
     while [ $(do_ssh ls -d ${SNAPSHOTS_PATH}${volume}.daily-\* | wc -l) -gt 30 ]; do
-        echo -n "[$(date +'%Y-%m-%d %H:%M')] "
-        do_ssh btrfs subvolume delete $(do_ssh ls -d ${SNAPSHOTS_PATH}${volume}.daily-\* | head -n1)
+        do_ssh sudo btrfs subvolume delete $(do_ssh ls -d ${SNAPSHOTS_PATH}${volume}.daily-\* | head -n1)
     done
 
     # Monthly snapshot from last one
     last_snapshot_path=$(do_ssh ls -d ${SNAPSHOTS_PATH}${volume}.daily-\* | tail -n1)
     last_snapshot_month=${last_snapshot_path:(-10):7}
     if $(do_ssh test ! -e ${SNAPSHOTS_PATH}${volume}.monthly-${last_snapshot_month}); then
-        do_ssh btrfs subvolume snapshot -r ${last_snapshot_path} ${SNAPSHOTS_PATH}${volume}.monthly-${last_snapshot_month}
+        do_ssh sudo btrfs subvolume snapshot -r ${last_snapshot_path} ${SNAPSHOTS_PATH}${volume}.monthly-${last_snapshot_month}
         do_ssh sync
     else
-        [ ${DEBUG} -eq 1 ] && echo "[$(date +'%Y-%m-%d %H:%M')] Monthly snapshot ${SNAPSHOTS_PATH}${volume}.monthly-${last_snapshot_month} already exists"
+        echo "Monthly snapshot ${SNAPSHOTS_PATH}${volume}.monthly-${last_snapshot_month} already exists"
     fi
 
     # Cleaning monthly snapshots to keep no more than 6
     while [ $(do_ssh ls -d ${SNAPSHOTS_PATH}${volume}.monthly-\* | wc -l) -gt 6 ]; do
-        echo -n "[$(date +'%Y-%m-%d %H:%M')] "
-        do_ssh btrfs subvolume delete $(do_ssh ls -d ${SNAPSHOTS_PATH}${volume}.daily-\* | head -n1)
+        do_ssh sudo btrfs subvolume delete $(do_ssh ls -d ${SNAPSHOTS_PATH}${volume}.daily-\* | head -n1)
     done
 done
