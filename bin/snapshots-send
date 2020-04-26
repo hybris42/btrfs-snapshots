@@ -54,7 +54,7 @@ for volume in $(cat /etc/snapshots.list); do
         previous_snapshot=${snapshot}
     done
 
-    # Cleaning snapshots to keep no more than 30
+    # Cleaning daily snapshots to keep no more than 30
     while [ $(do_ssh ls -d ${SNAPSHOTS_PATH}${volume}.daily-\* | wc -l) -gt 30 ]; do
         echo -n "[$(date +'%Y-%m-%d %H:%M')] "
         do_ssh btrfs subvolume delete $(do_ssh ls -d ${SNAPSHOTS_PATH}${volume}.daily-\* | head -n1)
@@ -69,4 +69,10 @@ for volume in $(cat /etc/snapshots.list); do
     else
         [ ${DEBUG} -eq 1 ] && echo "[$(date +'%Y-%m-%d %H:%M')] Monthly snapshot ${SNAPSHOTS_PATH}${volume}.monthly-${last_snapshot_month} already exists"
     fi
+
+    # Cleaning monthly snapshots to keep no more than 6
+    while [ $(do_ssh ls -d ${SNAPSHOTS_PATH}${volume}.monthly-\* | wc -l) -gt 6 ]; do
+        echo -n "[$(date +'%Y-%m-%d %H:%M')] "
+        do_ssh btrfs subvolume delete $(do_ssh ls -d ${SNAPSHOTS_PATH}${volume}.daily-\* | head -n1)
+    done
 done

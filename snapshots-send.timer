@@ -1,0 +1,8 @@
+[Unit]
+Description=Send snapshots at 1:15 every day
+
+[Timer]
+OnCalendar=*-*-* 1:15:00
+
+[Install]
+WantedBy=timers.target
