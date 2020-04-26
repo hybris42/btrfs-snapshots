@@ -17,7 +17,6 @@ for volume in $(cat /etc/snapshots.list); do
     fi
 
     # Check if snapshot is already done
-    btrfs subvolume show ${volume}.daily-$(date +%Y-%m-%d) > /dev/null 2>&1
     if ! btrfs subvolume show ${volume}.daily-$(date +%Y-%m-%d) > /dev/null 2>&1; then
         btrfs subvolume snapshot -r ${volume} ${volume}.daily-$(date +%Y-%m-%d)
         sync
