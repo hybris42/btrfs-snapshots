@@ -35,7 +35,7 @@ for volume in $(cat /etc/snapshots.list); do
     for snapshot in ${volume}.daily-*; do
         # Snapshot already sent
         if do_ssh test -e ${SNAPSHOTS_PATH}${snapshot}; then
-            echo "Snapshot ${snapshot} already sent"
+            [ ${DEBUG} -eq 1 ] && echo "Snapshot ${snapshot} already sent"
             previous_snapshot=${snapshot}
             continue
         fi
@@ -66,7 +66,7 @@ for volume in $(cat /etc/snapshots.list); do
         do_ssh sudo btrfs subvolume snapshot -r ${last_snapshot_path} ${SNAPSHOTS_PATH}${volume}.monthly-${last_snapshot_month}
         do_ssh sync
     else
-        echo "Monthly snapshot ${SNAPSHOTS_PATH}${volume}.monthly-${last_snapshot_month} already exists"
+        [ ${DEBUG} -eq 1 ] && echo "Monthly snapshot ${SNAPSHOTS_PATH}${volume}.monthly-${last_snapshot_month} already exists"
     fi
 
     # Cleaning monthly snapshots to keep no more than 6
