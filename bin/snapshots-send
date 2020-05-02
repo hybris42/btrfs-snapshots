@@ -19,6 +19,13 @@ do_ssh() {
     ssh ${SNAPSHOTS_USER}@${SNAPSHOTS_SERVER} $@
 }
 
+# Send information to metrics
+send_metrics() {
+    [ -n "${METRICS_URL}" ] && [ -n "${METRICS_AUTH}" ] && [ -n "$1" ] && \
+        curl -s -u "${METRICS_AUTH}" -X POST "${METRICS_URL}/write?db=events" \
+             --data-binary "backup,host=$(hostname),title=backup text=\"$1\""
+}
+
 # Check if snapshots server is up
 if ! do_ssh true 2> /dev/null; then
     echo "ERROR: ${SNAPSHOTS_SERVER} unreachable"
@@ -43,14 +50,18 @@ for volume in $(cat /etc/snapshots.list); do
         # First snapshot, sent plain snapshot
         if [ x${previous_snapshot} = x ]; then
             echo "Sending first snapshot of ${volume}"
+            send_metrics "Start uploading ${snapshot}"
             btrfs send -q ${snapshot} | do_ssh sudo btrfs receive ${SNAPSHOTS_PATH}${volume}
+            send_metrics "Finished uploading ${snapshot}"
             previous_snapshot=${snapshot}
             continue
         fi
 
         # Send incremental snapshot, cloned from previous snapshot
         echo "Sending snapshot of ${volume}"
+        [ -n "${METRICS_URL}" ] && [ -n "${METRICS_AUTH}" ] && send_metrics "Start uploading ${snapshot}"
         btrfs send -q -p ${previous_snapshot} ${snapshot} | do_ssh sudo btrfs receive ${SNAPSHOTS_PATH}${volume}
+        [ -n "${METRICS_URL}" ] && [ -n "${METRICS_AUTH}" ] && send_metrics "Finished uploading ${snapshot}"
         previous_snapshot=${snapshot}
     done
 
