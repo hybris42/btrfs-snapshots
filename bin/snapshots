@@ -9,11 +9,17 @@ if [ ! -e /etc/snapshots.list ]; then
 fi
 
 # Read btrfs volumes to snapshot from /etc/snapshots.list
-for volume in $(cat /etc/snapshots.list); do
-    # Check last char, must be a '/'
-    if [ x"${volume: -1}" != x'/' ]; then
-        echo "ERROR: check /etc/snapshots.list, ${volume} should end with a '/'"
+for host_volume in $(cat /etc/snapshots.list); do
+    host=$(echo ${host_volume} | cut -d':' -f1)
+    volume=$(echo ${host_volume} | cut -d':' -f1)
+
+    # Check on host and volume
+    if [ -z "${host}" ] || [ -z "${volume}" ] || [ x"${volume: -1}" != x'/' ]; then
+        echo "ERROR: check /etc/snapshots.list, ${host_volume} is invalid"
         exit 1
+    fi
+    if [ ${host} != $(hostname) ]; then
+        continue
     fi
 
     # Check if snapshot is already done

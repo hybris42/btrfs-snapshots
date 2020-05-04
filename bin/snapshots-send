@@ -33,7 +33,19 @@ if ! do_ssh true 2> /dev/null; then
 fi
 
 # Read btrfs volumes to snapshot from /etc/snapshots.list
-for volume in $(cat /etc/snapshots.list); do
+for host_volume in $(cat /etc/snapshots.list); do
+    host=$(echo ${host_volume} | cut -d':' -f1)
+    volume=$(echo ${host_volume} | cut -d':' -f1)
+
+    # Check on host and volume
+    if [ -z "${host}" ] || [ -z "${volume}" ] || [ x"${volume: -1}" != x'/' ]; then
+        echo "ERROR: check /etc/snapshots.list, ${host_volume} is invalid"
+        exit 1
+    fi
+    if [ ${host} != $(hostname) ]; then
+        continue
+    fi
+
     # Make sure remote directory exists
     do_ssh mkdir -p ${SNAPSHOTS_PATH}${volume}
 
