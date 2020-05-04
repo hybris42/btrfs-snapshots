@@ -11,7 +11,7 @@ fi
 # Read btrfs volumes to snapshot from /etc/snapshots.list
 for host_volume in $(cat /etc/snapshots.list); do
     host=$(echo ${host_volume} | cut -d':' -f1)
-    volume=$(echo ${host_volume} | cut -d':' -f1)
+    volume=$(echo ${host_volume} | cut -d':' -f2)
 
     # Check on host and volume
     if [ -z "${host}" ] || [ -z "${volume}" ] || [ x"${volume: -1}" != x'/' ]; then
