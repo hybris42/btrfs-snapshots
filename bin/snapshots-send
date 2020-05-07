@@ -23,7 +23,7 @@ do_ssh() {
 send_metrics() {
     [ -n "${METRICS_URL}" ] && [ -n "${METRICS_AUTH}" ] && [ -n "$1" ] && \
         curl -s -u "${METRICS_AUTH}" -X POST "${METRICS_URL}/write?db=events" \
-             --data-binary "backup,host=$(hostname),title=backup text=\"$1\""
+             --data-binary "backup,host=$(hostname),title=backup text=\"$(hostname):$1\""
 }
 
 # Check if snapshots server is up
@@ -62,18 +62,18 @@ for host_volume in $(cat /etc/snapshots.list); do
         # First snapshot, sent plain snapshot
         if [ x${previous_snapshot} = x ]; then
             echo "Sending first snapshot of ${volume}"
-            send_metrics "Start uploading ${snapshot}"
+            send_metrics "$(hostname):${volume} backup launched"
             btrfs send -q ${snapshot} | do_ssh sudo btrfs receive ${SNAPSHOTS_PATH}${volume}
-            send_metrics "Finished uploading ${snapshot}"
+            send_metrics "$(hostname):${volume} backup done"
             previous_snapshot=${snapshot}
             continue
         fi
 
         # Send incremental snapshot, cloned from previous snapshot
         echo "Sending snapshot of ${volume}"
-        [ -n "${METRICS_URL}" ] && [ -n "${METRICS_AUTH}" ] && send_metrics "Start uploading ${snapshot}"
+        [ -n "${METRICS_URL}" ] && [ -n "${METRICS_AUTH}" ] && send_metrics "$(hostname):${volume} backup launched"
         btrfs send -q -p ${previous_snapshot} ${snapshot} | do_ssh sudo btrfs receive ${SNAPSHOTS_PATH}${volume}
-        [ -n "${METRICS_URL}" ] && [ -n "${METRICS_AUTH}" ] && send_metrics "Finished uploading ${snapshot}"
+        [ -n "${METRICS_URL}" ] && [ -n "${METRICS_AUTH}" ] && send_metrics "$(hostname):${volume} backup done"
         previous_snapshot=${snapshot}
     done
 
