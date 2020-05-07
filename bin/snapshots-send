@@ -23,7 +23,7 @@ do_ssh() {
 send_metrics() {
     [ -n "${METRICS_URL}" ] && [ -n "${METRICS_AUTH}" ] && [ -n "$1" ] && \
         curl -s -u "${METRICS_AUTH}" -X POST "${METRICS_URL}/write?db=events" \
-             --data-binary "backup,host=$(hostname),title=backup text=\"$(hostname):$1\""
+             --data-binary "backup,host=$(hostname),title=backup text=\"$1\""
 }
 
 # Check if snapshots server is up
