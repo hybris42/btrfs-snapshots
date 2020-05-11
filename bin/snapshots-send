@@ -38,10 +38,19 @@ for host_volume in $(cat /etc/snapshots.list); do
     volume=$(echo ${host_volume} | cut -d':' -f2)
 
     # Check on host and volume
-    if [ -z "${host}" ] || [ -z "${volume}" ] || [ x"${volume: -1}" != x'/' ]; then
-        echo "ERROR: check /etc/snapshots.list, ${host_volume} is invalid"
-        exit 1
+    if [ -z "${host}" ] || [ -z "${volume}" ]; then
+        echo "ERROR: skipping element in /etc/snapshots.list, '${host_volume}' is invalid"
+        continue
     fi
+    # Add extra '/' if necessary
+    if [ x"${volume: -1}" != x'/' ]; then
+        volume="${volume}/"
+    fi
+    # Check if path is mounted
+    if ! mountpoint -q ${volume}; then
+        echo "ERROR: skipping element in /etc/snapshots.list, '${volume}' is not a mountpoint"
+    fi
+
     if [ ${host} != $(hostname) ]; then
         continue
     fi
