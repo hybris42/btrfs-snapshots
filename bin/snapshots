@@ -9,18 +9,10 @@ if [ ! -e /etc/snapshots.list ]; then
 fi
 
 # Read btrfs volumes to snapshot from /etc/snapshots.list
-for host_volume in $(cat /etc/snapshots.list); do
-    host=$(echo ${host_volume} | cut -d':' -f1)
-    volume=$(echo ${host_volume} | cut -d':' -f2)
-
+for volume in $(cat /etc/snapshots.list); do
     # Check on host and volume
-    if [ -z "${host}" ] || [ -z "${volume}" ]; then
-        echo "ERROR: skipping element in /etc/snapshots.list, '${host_volume}' is invalid"
-        continue
-    fi
-
-    # Only consider own volumes
-    if [ ${host} != $(hostname) ]; then
+    if [ -z "${volume}" ]; then
+        echo "WARNING: skipping empty line in /etc/snapshots.list"
         continue
     fi
 
@@ -31,7 +23,7 @@ for host_volume in $(cat /etc/snapshots.list); do
 
     # Check if path is a btrfs subvolume
     if ! btrfs subvolume show ${volume} > /dev/null 2>&1; then
-        echo "ERROR: skipping element in /etc/snapshots.list, '${volume}' is not a mountpoint"
+        echo "ERROR: skipping element in /etc/snapshots.list, '${volume}' is not a btrfs subvolume"
         continue
     fi
 
