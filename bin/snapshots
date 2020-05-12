@@ -28,8 +28,9 @@ for host_volume in $(cat /etc/snapshots.list); do
     if [ x"${volume: -1}" != x'/' ]; then
         volume="${volume}/"
     fi
-    # Check if path is mounted
-    if ! mountpoint -q ${volume}; then
+
+    # Check if path is a btrfs subvolume
+    if ! btrfs subvolume show ${volume} > /dev/null 2>&1; then
         echo "ERROR: skipping element in /etc/snapshots.list, '${volume}' is not a mountpoint"
         continue
     fi
