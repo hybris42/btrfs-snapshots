@@ -56,6 +56,7 @@ for host_volume in $(cat /etc/snapshots.list); do
     # Check if path is mounted
     if ! mountpoint -q ${volume}; then
         echo "ERROR: skipping element in /etc/snapshots.list, '${volume}' is not a mountpoint"
+        continue
     fi
 
     # Make sure remote directory exists
