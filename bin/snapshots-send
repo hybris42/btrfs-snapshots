@@ -42,17 +42,20 @@ for host_volume in $(cat /etc/snapshots.list); do
         echo "ERROR: skipping element in /etc/snapshots.list, '${host_volume}' is invalid"
         continue
     fi
+
+    # Only consider own volumes
+    if [ ${host} != $(hostname) ]; then
+        continue
+    fi
+
     # Add extra '/' if necessary
     if [ x"${volume: -1}" != x'/' ]; then
         volume="${volume}/"
     fi
+
     # Check if path is mounted
     if ! mountpoint -q ${volume}; then
         echo "ERROR: skipping element in /etc/snapshots.list, '${volume}' is not a mountpoint"
-    fi
-
-    if [ ${host} != $(hostname) ]; then
-        continue
     fi
 
     # Make sure remote directory exists
