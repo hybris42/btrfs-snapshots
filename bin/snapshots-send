@@ -99,6 +99,6 @@ for volume in $(cat /etc/snapshots.list); do
 
     # Cleaning monthly snapshots to keep no more than 6
     while [ $(do_ssh ls -d ${SNAPSHOTS_PATH}${volume}.monthly-\* | wc -l) -gt 6 ]; do
-        do_ssh sudo btrfs subvolume delete $(do_ssh ls -d ${SNAPSHOTS_PATH}${volume}.daily-\* | head -n1)
+        do_ssh sudo btrfs subvolume delete $(do_ssh ls -d ${SNAPSHOTS_PATH}${volume}.monthly-\* | head -n1)
     done
 done
