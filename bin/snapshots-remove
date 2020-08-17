@@ -1,0 +1,26 @@
+#! /bin/bash
+
+if [ $# -ne 1 ]; then
+    echo "usage: snapshots-remove PATH"
+    exit 1
+fi
+
+# Find mountpoint, check if in /etc/snapshots.list
+MOUNTPOINT=$(findmnt -n -o TARGET --target $1)
+if ! grep ${MOUNTPOINT} /etc/snapshots.list > /dev/null; then
+    echo "ERROR: File is not in a backed up directory"
+    exit 1
+fi
+
+echo "Will remove $1 in every snapshots, write its basename to confirm"
+read reply
+
+if [ ! ${reply} = $(basename $1) ]; then
+    exit 0
+fi
+
+for i in $(ls -d $MOUNTPOINT/.daily-*); do
+    btrfs property set -ts $i ro false
+    [ -e $i/$1 ] && echo "Removing $i/$1" && rm -fr $i/$1
+    btrfs property set -ts $i ro true
+done
