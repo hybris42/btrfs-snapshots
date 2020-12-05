@@ -83,7 +83,9 @@ for volume in $(cat /etc/snapshots.list); do
     done
 
     # Cleaning daily snapshots to keep no more than 30
-    while [ $(do_ssh ls -d ${SNAPSHOTS_PATH}${volume}.daily-\* | wc -l) -gt 30 ]; do
+    # (or SNAPSHOTS_KEEP_DAILY_REMOTE if set in /etc/default/snapshots)
+    echo "Keeping last ${SNAPSHOTS_KEEP_DAILY_REMOTE:-30} daily snapshots of ${volume} remotely"
+    while [ $(do_ssh ls -d ${SNAPSHOTS_PATH}${volume}.daily-\* | wc -l) -gt ${SNAPSHOTS_KEEP_DAILY_REMOTE:-30} ]; do
         do_ssh sudo btrfs subvolume delete $(do_ssh ls -d ${SNAPSHOTS_PATH}${volume}.daily-\* | head -n1)
     done
 
@@ -98,7 +100,9 @@ for volume in $(cat /etc/snapshots.list); do
     fi
 
     # Cleaning monthly snapshots to keep no more than 6
-    while [ $(do_ssh ls -d ${SNAPSHOTS_PATH}${volume}.monthly-\* | wc -l) -gt 6 ]; do
+    # (or SNAPSHOTS_KEEP_MONTHLY_REMOTE if set in /etc/default/snapshots)
+    echo "Keeping last ${SNAPSHOTS_KEEP_MONTHLY_REMOTE:-6} monthly snapshots of ${volume} remotely"
+    while [ $(do_ssh ls -d ${SNAPSHOTS_PATH}${volume}.monthly-\* | wc -l) -gt ${SNAPSHOTS_KEEP_MONTHLY_REMOTE:-6} ]; do
         do_ssh sudo btrfs subvolume delete $(do_ssh ls -d ${SNAPSHOTS_PATH}${volume}.monthly-\* | head -n1)
     done
 done

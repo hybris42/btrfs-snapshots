@@ -36,7 +36,9 @@ for volume in $(cat /etc/snapshots.list); do
     fi
 
     # Cleaning snapshots to keep no more than 7
-    while [ $(ls -d ${volume}.daily-* | wc -l) -gt 7 ]; do
+    # (or SNAPSHOTS_KEEP_LOCAL if set in /etc/default/snapshots)
+    echo "Keeping last ${SNAPSHOTS_KEEP_LOCAL:-7} daily snapshots of ${volume} locally"
+    while [ $(ls -d ${volume}.daily-* | wc -l) -gt ${SNAPSHOTS_KEEP_LOCAL:-7} ]; do
         btrfs subvolume delete $(ls -d ${volume}.daily-* | head -n1)
     done
 done
