@@ -9,6 +9,7 @@ install:
 	################
 	cp bin/snapshots       /usr/local/sbin/
 	cp bin/snapshots-send  /usr/local/sbin/
+	cp bin/snapshots-mount /usr/local/bin/
 	##########################
 	# Install systemd timers #
 	##########################

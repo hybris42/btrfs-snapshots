@@ -1,0 +1,33 @@
+#! /bin/bash
+
+source /etc/default/snapshots
+
+if [ ! -x /usr/bin/sshfs ]; then
+    echo "Error: SSHFS unavailable"
+    exit 1
+fi
+
+SUBPATH=".daily-$(date +%Y-%m-%d)"
+
+if [ $# -eq 0 ] || [ $# -gt 2 ]; then
+    echo "usage: snapshots-mount [SUBPATH] MOUNTPOINT"
+    exit 2
+fi
+
+if [ $# -eq 2 ]; then
+    SUBPATH=$1
+    shift
+fi
+MOUNTPOINT=$1
+
+# Check on distant folder and local mountpoint
+if ! ssh ${SNAPSHOTS_USER}@${SNAPSHOTS_SERVER} test -e ${SNAPSHOTS_PATH}/${SUBPATH}; then
+    echo "Error: remote folder ${SNAPSHOTS_PATH}/${SUBPATH} does not exist"
+    exit 3
+fi
+if mountpoint -q ${MOUNTPOINT}; then
+    echo "Error: ${MOUNTPOINT} already mounted or does not exist"
+    exit 3
+fi
+
+sshfs ${SNAPSHOTS_USER}@${SNAPSHOTS_SERVER}:${SNAPSHOTS_PATH}/${SUBPATH} ${MOUNTPOINT}
