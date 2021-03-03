@@ -17,7 +17,7 @@ for volume_desc in $(cat /etc/snapshots.list); do
         if [ -z ${volume} ]; then
             volume=${v}
         else
-            declare $v
+            declare ${v}
         fi
     done
 
