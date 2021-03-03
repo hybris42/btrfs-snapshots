@@ -1,7 +1,5 @@
 #! /bin/bash
 
-source /etc/default/snapshots
-
 # Check for required /etc/snapshots.list
 if [ ! -e /etc/snapshots.list ]; then
     echo "ERROR: /etc/snapshots.list is required"
@@ -9,7 +7,20 @@ if [ ! -e /etc/snapshots.list ]; then
 fi
 
 # Read btrfs volumes to snapshot from /etc/snapshots.list
-for volume in $(cat /etc/snapshots.list); do
+IFS=$'\n'
+for volume_desc in $(cat /etc/snapshots.list); do
+    # Override retention policy in /etc/snapshots.list, or example: "/ SNAPSHOTS_KEEP_MONTHLY_REMOTE=12"
+    source /etc/default/snapshots
+    volume=""
+    IFS=' '
+    for v in ${volume_desc}; do
+        if [ -z ${volume} ]; then
+            volume=${v}
+        else
+            declare $v
+        fi
+    done
+
     # Check on host and volume
     if [ -z "${volume}" ]; then
         echo "WARNING: skipping empty line in /etc/snapshots.list"

@@ -33,7 +33,20 @@ if ! do_ssh true 2> /dev/null; then
 fi
 
 # Read btrfs volumes to snapshot from /etc/snapshots.list
+IFS=$'\n'
 for volume in $(cat /etc/snapshots.list); do
+    # Override retention policy in /etc/snapshots.list, or example: "/ SNAPSHOTS_KEEP_MONTHLY_REMOTE=12"
+    source /etc/default/snapshots
+    volume=""
+    IFS=' '
+    for v in ${volume_desc}; do
+        if [ -z ${volume} ]; then
+            volume=${v}
+        else
+            declare $v
+        fi
+    done
+
     # Check on host and volume
     if [ -z "${volume}" ]; then
         echo "WARNING: skipping empty line in /etc/snapshots.list"
