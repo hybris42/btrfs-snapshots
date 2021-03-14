@@ -26,7 +26,7 @@ snapshots-logger() {
         curl -s -u "${METRICS_AUTH}" -X POST "${METRICS_URL}/write?db=events" \
              --data-binary "backup,host=$(hostname),title=backup text=\"$1\""
     # Write log on remote:/var/log/snapshots-send.log
-    snapshots-remote-exec "echo \"[\$(date -u)] $1\" >> /var/log/snapshots/snapshots-send.log"
+    snapshots-remote-exec "echo \"[\$(date)] $1\" >> /var/log/snapshots/snapshots-send.log"
 }
 
 # Check if snapshots server is up
