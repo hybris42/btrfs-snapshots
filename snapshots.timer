@@ -1,8 +1,0 @@
-[Unit]
-Description=Daily snapshot at 1:00
-
-[Timer]
-OnCalendar=*-*-* 1:00:00
-
-[Install]
-WantedBy=timers.target

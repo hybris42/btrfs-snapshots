@@ -1,9 +1,0 @@
-[Unit]
-Description=Send btrfs snapshots
-
-[Service]
-Type=oneshot
-ExecStart=/usr/local/sbin/snapshots-send
-
-[Install]
-WantedBy=multi-user.target

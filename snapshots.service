@@ -1,9 +1,0 @@
-[Unit]
-Description=Snapshot btrfs filesystems
-
-[Service]
-Type=oneshot
-ExecStart=/usr/local/sbin/snapshots
-
-[Install]
-WantedBy=multi-user.target
